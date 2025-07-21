@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import Payment from './Payment.vue'
 
 //stats
@@ -10,6 +10,7 @@ const textareaRef = ref(null)
 const showPhotoTooltip = ref(false)
 const photos = ref([])
 const inputFileRef = ref(null)
+const coffeeIsTrue = ref('')
 let tooltipTimeout
 
 //dates
@@ -28,6 +29,32 @@ const badTags = [
   'Было грязно',
   'Другое',
 ]
+
+const normalTags = [
+  'Качество услуг',
+  'Вкус угощений/напитков',
+  'Чистота студии',
+  'Недружелюбный мастер',
+  'Незаботливый администратор',
+  'Фильмы',
+  'Атмосфера',
+  'Ожидание',
+  'Другое',
+]
+
+const goodTags = [
+  'Качество услуг',
+  'Заботливый администратор',
+  'Угощения/напитки',
+  'Дружелюбный мастер',
+  'Интересное кино',
+  'Освежитель воздуха',
+  'Чистота студии',
+  'Атмосфера',
+  '💖',
+]
+
+const coffeeDate = ['Да', 'Нет']
 
 //functions
 const setRating = (value) => {
@@ -56,6 +83,21 @@ watch(comment, () => {
     el.style.height = 'auto'
     el.style.height = `${el.scrollHeight}px`
   }
+})
+
+const starText = computed(() => {
+  if (star.value <= 3)
+    return 'Мы постараемся исправить любую проблему. Расскажите, что не понравилось?'
+  if (star.value === 4) return 'Хорошо, но не идеально… На что нам обратить внимание?)'
+  if (star.value === 5) return 'Круууть))) А что больше всего понравилось?'
+  return ''
+})
+
+const currentTags = computed(() => {
+  if (star.value <= 3) return badTags
+  if (star.value === 4) return normalTags
+  if (star.value === 5) return goodTags
+  return []
 })
 
 // Загрузка фото
@@ -172,15 +214,15 @@ const removePhoto = (index) => {
     </div>
 
     <Transition name="fade">
-      <div v-if="star > 0" class="bg-[#F6F5F2] pt-5 pb-6 ">
+      <div v-if="star > 0" class="bg-[#F6F5F2] pt-5 pb-6">
         <Transition name="fade">
-          <div v-if="star <= 3" class="px-3">
+          <div v-if="star" class="px-3">
             <p class="text-lg leading-6 text-center text-[#222222] px-1">
-              Мы постараемся исправить любую проблему. Расскажите, что не понравилось?
+              {{ starText }}
             </p>
-            <div class="flex flex-wrap justify-between align-start gap-1 pt-6 gap-y-[0.9375rem]">
+            <div class="flex flex-wrap justify-between align-start pt-6 gap-y-[0.9375rem]">
               <button
-                v-for="(tag, index) in badTags"
+                v-for="(tag, index) in currentTags"
                 :key="index"
                 type="button"
                 @click="toggleTag(tag)"
@@ -196,6 +238,7 @@ const removePhoto = (index) => {
             </div>
           </div>
         </Transition>
+
         <div class="my-5 px-3">
           <textarea
             v-model="comment"
@@ -324,7 +367,25 @@ const removePhoto = (index) => {
             </Transition>
           </div>
         </div>
-        
+        <div class="p-5 border-y border-[#ACB5B8]">
+          <p class="text-[#222222] text-center">Предложили ли вам чай или кофе?</p>
+          <div class="flex items-center justify-center gap-2.5 mt-2.5">
+            <button
+              v-for="coffee in coffeeDate"
+              :key="coffee"
+              type="button"
+              @click="coffeeIsTrue = coffee"
+              :class="[
+                'border cursor-pointer rounded-sm transition-colors text-sm duration-150 w-12.5 h-10',
+                coffeeIsTrue === coffee
+                  ? 'bg-[#274138] text-[#F6F5F2] border-[#274138]'
+                  : 'text-[#222] border-[#8C9497]',
+              ]"
+            >
+              {{ coffee }}
+            </button>
+          </div>
+        </div>
       </div>
     </Transition>
 
