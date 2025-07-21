@@ -1,15 +1,105 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import Payment from './Payment.vue'
 
+//stats
 const star = ref(0)
+const comment = ref('')
+const selectTags = ref([])
+const textareaRef = ref(null)
+const showPhotoTooltip = ref(false)
+const photos = ref([])
+const inputFileRef = ref(null)
+let tooltipTimeout
 
+//dates
+const badTags = [
+  'Некачественные услуги',
+  'Долгое ожидание',
+  'Невежливый мастер',
+  'Навязывание услуг',
+  'Невежливый администратор',
+  'Поранили',
+  'Было больно',
+  'Нестерильные инструменты ',
+  'Не было угощений',
+  'Невкусный чай/кофе',
+  'Ошибка в стоимости',
+  'Было грязно',
+  'Другое',
+]
+
+//functions
 const setRating = (value) => {
   star.value = value
+}
+
+const toggleTag = (item) => {
+  if (selectTags.value.includes(item)) {
+    selectTags.value = selectTags.value.filter((tag) => tag !== item)
+  } else {
+    selectTags.value.push(item)
+  }
+}
+
+const toggleTooltip = () => {
+  showPhotoTooltip.value = true
+  clearTimeout(tooltipTimeout)
+  tooltipTimeout = setTimeout(() => {
+    showPhotoTooltip.value = false
+  }, 4000)
+}
+
+watch(comment, () => {
+  const el = textareaRef.value
+  if (el) {
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }
+})
+
+// Загрузка фото
+const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = (error) => reject(error)
+  })
+
+const onFileChange = async (event) => {
+  const files = event.target.files
+  if (!files.length) return
+
+  for (let i = 0; i < files.length; i++) {
+    if (photos.value.length >= 5) break
+
+    const file = files[i]
+
+    if (file.size > 5 * 1024 * 1024) {
+      toggleTooltip()
+      continue
+    }
+
+    const base64 = await toBase64(file)
+    photos.value.push(base64)
+  }
+
+  event.target.value = ''
+}
+
+const openFileDialog = () => {
+  if (photos.value.length >= 5) return
+  inputFileRef.value?.click()
+}
+
+const removePhoto = (index) => {
+  photos.value.splice(index, 1)
 }
 </script>
 
 <template>
-  <div class="w-[23.4375rem] z-50 bg-white">
+  <div class="w-[23.4375rem] z-50 bg-white h-full">
     <a href="#" class="bg-[#274138] py-5 flex justify-center">
       <svg
         width="110"
@@ -59,7 +149,7 @@ const setRating = (value) => {
       >
         21.05.2022 | Студия на Арбате
       </div>
-      <div class="flex items-center justify-center pt-[1.1044rem] pb-11">
+      <div class="flex items-center justify-center pt-[1.1044rem]">
         <div class="flex justify-center gap-2">
           <template v-for="i in 5" :key="i">
             <svg
@@ -80,5 +170,193 @@ const setRating = (value) => {
         </div>
       </div>
     </div>
+
+    <Transition name="fade">
+      <div v-if="star > 0" class="bg-[#F6F5F2] pt-5 pb-6 ">
+        <Transition name="fade">
+          <div v-if="star <= 3" class="px-3">
+            <p class="text-lg leading-6 text-center text-[#222222] px-1">
+              Мы постараемся исправить любую проблему. Расскажите, что не понравилось?
+            </p>
+            <div class="flex flex-wrap justify-between align-start gap-1 pt-6 gap-y-[0.9375rem]">
+              <button
+                v-for="(tag, index) in badTags"
+                :key="index"
+                type="button"
+                @click="toggleTag(tag)"
+                :class="[
+                  'py-[0.3125rem] border cursor-pointer rounded-4xl px-3 text-sm leading-[1.5625rem] transition-colors duration-150',
+                  selectTags.includes(tag)
+                    ? 'bg-[#274138] text-[#F6F5F2] border-[#274138]'
+                    : 'text-[#222]',
+                ]"
+              >
+                {{ tag }}
+              </button>
+            </div>
+          </div>
+        </Transition>
+        <div class="my-5 px-3">
+          <textarea
+            v-model="comment"
+            ref="textareaRef"
+            placeholder="Ваш комментарий"
+            class="bg-white w-full p-[0.9375rem] focus:outline-0 resize-none rounded-md overflow-hidden"
+          />
+        </div>
+        <div class="mt-5 mb-6 px-3">
+          <div class="flex justify-start items-center gap-[0.5625rem] px-2">
+            <p>Добавьте фото с вашего визита</p>
+            <div class="relative w-fit flex items-center">
+              <button @click="toggleTooltip" class="focus:outline-none cursor-pointer">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7.5" stroke="#8C9497" />
+                  <rect x="7.5" y="6.22266" width="1" height="6.22222" rx="0.5" fill="#8C9497" />
+                  <circle cx="8" cy="4.75" r="0.75" fill="#8C9497" />
+                </svg>
+              </button>
+              <Transition name="fade">
+                <div
+                  v-show="showPhotoTooltip"
+                  class="tooltip absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-xs rounded px-2 py-1 whitespace-nowrap z-10 bg-white text-[#8C9497]"
+                >
+                  не более 5Мб
+                </div>
+              </Transition>
+            </div>
+          </div>
+          <div class="flex items-center justify-start gap-2.5 flex-row flex-nowrap">
+            <TransitionGroup
+              name="fade"
+              tag="div"
+              v-if="photos.length > 0"
+              class="flex flex-wrap gap-2 mt-3 px-2"
+            >
+              <div v-for="(photo, index) in photos" :key="photo" class="relative w-12.5 h-12.5">
+                <img :src="photo" alt="photo" class="object-cover w-full h-full rounded" />
+                <button
+                  @click="removePhoto(index)"
+                  type="button"
+                  class="absolute -top-2 -right-2 bg-white bg-opacity-50 text-white w-5 h-5 flex items-center justify-center rounded-full cursor-pointer"
+                  aria-label="Удалить фото"
+                >
+                  <svg
+                    width="8"
+                    height="8"
+                    viewBox="0 0 8 8"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M0.146444 7.14584C-0.0488147 7.3411 -0.0488147 7.65769 0.146444 7.85296C0.341703 8.04822 0.65828 8.04822 0.853539 7.85296L3.99953 4.70686L7.14559 7.85302C7.34085 8.04829 7.65743 8.04829 7.85269 7.85302C8.04795 7.65776 8.04795 7.34117 7.85269 7.14591L4.70663 3.99974L7.85269 0.853568C8.04795 0.658302 8.04795 0.341715 7.85269 0.146449C7.65743 -0.0488162 7.34085 -0.0488167 7.14559 0.146449L3.99953 3.29262L0.853539 0.146515C0.65828 -0.0487502 0.341703 -0.0487502 0.146444 0.146515C-0.0488147 0.341781 -0.0488147 0.658369 0.146444 0.853634L3.29244 3.99974L0.146444 7.14584Z"
+                      fill="#274138"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </TransitionGroup>
+
+            <Transition name="fade">
+              <div v-if="photos.length < 5" class="mt-2.5 flex items-center justify-start px-2">
+                <button
+                  type="button"
+                  @click="openFileDialog"
+                  class="bg-white p-[0.8125rem] w-12.5 h-12.5 cursor-pointer rounded"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <mask
+                      id="mask0_13922_8210"
+                      style="mask-type: alpha"
+                      maskUnits="userSpaceOnUse"
+                      x="1"
+                      y="0"
+                      width="23"
+                      height="23"
+                    >
+                      <rect x="1.5" width="22.5" height="22.5" fill="#D9D9D9" />
+                    </mask>
+                    <g mask="url(#mask0_13922_8210)">
+                      <path
+                        d="M20.0305 8.90634V18.9696C20.0305 19.4878 19.6104 19.9079 19.0922 19.9079H3.37579C2.85759 19.9079 2.4375 19.4878 2.4375 18.9696V7.58549C2.4375 7.06728 2.85759 6.6472 3.37579 6.6472H5.90083C6.21065 6.6472 6.5005 6.49425 6.67537 6.2385L7.87578 4.48291C8.05065 4.22716 8.3405 4.07422 8.65032 4.07422H11.234H15.1924"
+                        stroke="#274138"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                      />
+                      <circle
+                        cx="11.4543"
+                        cy="12.2112"
+                        r="3.13851"
+                        stroke="#274138"
+                        stroke-width="1.2"
+                        stroke-linecap="round"
+                      />
+                      <rect x="19.5" y="1" width="1" height="6" rx="0.5" fill="#274138" />
+                      <rect
+                        x="17"
+                        y="4.5"
+                        width="1"
+                        height="6"
+                        rx="0.5"
+                        transform="rotate(-90 17 4.5)"
+                        fill="#274138"
+                      />
+                    </g>
+                  </svg>
+                </button>
+
+                <input
+                  type="file"
+                  ref="inputFileRef"
+                  accept="image/*"
+                  multiple
+                  class="hidden"
+                  @change="onFileChange"
+                />
+              </div>
+            </Transition>
+          </div>
+        </div>
+        
+      </div>
+    </Transition>
+
+    <Payment />
   </div>
 </template>
+
+<style scoped>
+/* Transition styles */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+}
+
+/* ToolTip style */
+
+.tooltip::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: solid transparent;
+  border-bottom-color: #ffffff;
+  border-width: 0 5px 5px 5px;
+}
+</style>
