@@ -141,7 +141,9 @@ const removePhoto = (index) => {
 </script>
 
 <template>
-  <div class="w-[23.4375rem] z-50 bg-white h-full">
+  <div
+    :class="['max-w-[23.4375rem]', 'w-full', 'z-50', 'bg-white', star > 0 ? 'h-full' : 'h-auto']"
+  >
     <a href="#" class="bg-[#274138] py-5 flex justify-center">
       <svg
         width="110"
@@ -214,9 +216,9 @@ const removePhoto = (index) => {
     </div>
 
     <Transition name="fade">
-      <div v-if="star > 0" class="bg-[#F6F5F2] pt-5 pb-6">
+      <div v-if="star > 0" class="bg-[#F6F5F2] pt-5">
         <Transition name="fade">
-          <div v-if="star" class="px-3">
+          <div v-if="star" class="px-4">
             <p class="text-lg leading-6 text-center text-[#222222] px-1">
               {{ starText }}
             </p>
@@ -379,7 +381,7 @@ const removePhoto = (index) => {
                 'border cursor-pointer rounded-sm transition-colors text-sm duration-150 w-12.5 h-10',
                 coffeeIsTrue === coffee
                   ? 'bg-[#274138] text-[#F6F5F2] border-[#274138]'
-                  : 'text-[#222] border-[#8C9497]',
+                  : 'text-[#222] border-[#8C9497] bg-white',
               ]"
             >
               {{ coffee }}
@@ -389,7 +391,7 @@ const removePhoto = (index) => {
       </div>
     </Transition>
 
-    <Payment />
+    <Payment :is-comment="textareaRef" />
   </div>
 </template>
 
