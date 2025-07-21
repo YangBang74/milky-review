@@ -49,7 +49,7 @@ watch(price, (newVal) => {
             selectTip === tip.value
               ? 'bg-[#274138] text-white border-[#274138]'
               : 'bg-white border-[#8C9497]',
-            tip.value === 'Без чаевых' ? 'text-[0.75rem]' : 'text-sm',
+            tip.title === 'Без чаевых' ? 'text-[0.75rem]' : 'text-sm',
           ]"
         >
           {{ tip.title }}
