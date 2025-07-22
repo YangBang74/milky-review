@@ -1,10 +1,15 @@
 <script setup>
-import Review from './Review.vue'
+import ReviewBlock from '@/components/ReviewBlock.vue'
+
+defineProps({
+  rating: Number,
+  comment: String,
+})
 </script>
 <template>
   <div
     class="bg-black/20 absolute inset-0 w-full h-full flex-col items-center flex overflow-y-auto"
   >
-    <Review />
+    <ReviewBlock :rating="rating" :comment="comment" />
   </div>
 </template>

@@ -1,35 +1,30 @@
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, watch } from 'vue'
 
-// props
 const props = defineProps({
   isComment: String,
   onSubmit: Function,
   selectStar: Number,
   visitId: Number,
+  masterId: Number,
+  showCaptcha: Boolean,
+  isPayment: Boolean,
 })
 
-// emit
 const emit = defineEmits(['update:publishOnSite'])
 
-// states
 const selectTip = ref(null)
 const otherTip = ref(false)
 const publishOnSite = ref(false)
 const price = ref('')
-const showCaptcha = ref(false)
-const captchaToken = ref(null)
 
-// constants
 const tipsOptions = [
   { title: 'Без чаевых', value: null },
   { title: '99 ₽', value: 99 },
   { title: '199 ₽', value: 199 },
   { title: '299 ₽', value: 299 },
 ]
-const captchaKey = import.meta.env.VITE_CAPTCHA_KEY
 
-// functions
 const isSubmitDisabled = () => {
   return !props.selectStar && !selectTip.value && !price.value
 }
@@ -49,64 +44,13 @@ const toggleOtherTip = () => {
   }
 }
 
-const handleCaptchaSuccess = (token) => {
-  captchaToken.value = token
-  showCaptcha.value = false
-  handleSubmitWithToken()
-}
-
-// отправка отзыва
 const handleSubmit = async () => {
-  if (props.visitId) {
-    await handleSubmitWithToken()
-  } else {
-    showCaptcha.value = true
-    await nextTick()
-    renderCaptcha()
-  }
-}
-
-const handleSubmitWithToken = async () => {
   const tipAmount = selectTip.value || (price.value ? parseInt(price.value) : null)
-  await props.onSubmit({
-    tipAmount,
-    publishOnSite: publishOnSite.value,
-    captchaToken: captchaToken.value,
-  })
-  captchaToken.value = null
+  await props.onSubmit({ tipAmount, publishOnSite: publishOnSite.value })
 }
-
-const renderCaptcha = () => {
-  nextTick(() => {
-    const container = document.querySelector('.smart-captcha')
-    if (container) {
-      container.innerHTML = ''
-      if (window.smartCaptcha) {
-        window.smartCaptcha.render(container, {
-          sitekey: captchaKey,
-          callback: handleCaptchaSuccess,
-        })
-      }
-    }
-  })
-}
-
-onMounted(() => {
-  if (!document.querySelector('script[src*="captcha-api.yandex.ru"]')) {
-    const script = document.createElement('script')
-    script.src = 'https://captcha-api.yandex.ru/captcha.js'
-    script.async = true
-    script.onload = () => {
-      window.handleCaptchaSuccess = handleCaptchaSuccess
-    }
-    document.head.appendChild(script)
-  } else {
-    window.handleCaptchaSuccess = handleCaptchaSuccess
-  }
-})
 
 watch(price, (newVal) => {
-  const numeric = newVal?.toString().replace(/\D/g, '') ?? ''
+  const numeric = newVal ? newVal.toString().replace(/\D/g, '') : ''
   price.value = numeric
 })
 
@@ -172,11 +116,11 @@ watch(publishOnSite, (val) => {
           @click="handleSubmit"
           class="py-[0.9375rem] bg-[#274138] text-white w-full rounded-sm cursor-pointer transition disabled:bg-[#8C9497]"
         >
-          {{ selectTip || price ? 'Оставить чаевые' : 'Отправить отзыв' }}
+          {{ selectTip || price || props.isPayment ? 'Оставить чаевые' : 'Отправить отзыв' }}
         </button>
       </div>
     </div>
-    <div v-if="props.isComment" class="pb-[1.0625rem] flex justify-center">
+    <div v-if="isComment" class="pb-[1.0625rem] flex justify-center">
       <button
         type="button"
         @click="publishOnSite = !publishOnSite"
@@ -213,13 +157,7 @@ watch(publishOnSite, (val) => {
       </button>
     </div>
     <Transition name="fade">
-      <div v-if="showCaptcha" class="p-5 text-center">
-        <div
-          class="smart-captcha"
-          :data-sitekey="capthaKey"
-          data-callback="handleCaptchaSuccess"
-        ></div>
-      </div>
+      <slot v-if="showCaptcha" name="captcha"></slot>
     </Transition>
   </div>
 </template>
