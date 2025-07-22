@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 
 // props
 const props = defineProps({
@@ -20,22 +20,20 @@ const price = ref('')
 const showCaptcha = ref(false)
 const captchaToken = ref(null)
 
-// dates
+// constants
 const tipsOptions = [
   { title: 'Без чаевых', value: null },
   { title: '99 ₽', value: 99 },
   { title: '199 ₽', value: 199 },
   { title: '299 ₽', value: 299 },
 ]
-const capthaKey = import.meta.env.VITE_CAPTCHA_KEY
-console.log(capthaKey)
+const captchaKey = import.meta.env.VITE_CAPTCHA_KEY
 
-// Math function
+// functions
 const isSubmitDisabled = () => {
   return !props.selectStar && !selectTip.value && !price.value
 }
 
-// functions
 const setTip = (value) => {
   selectTip.value = value
   if (value !== null) {
@@ -57,11 +55,14 @@ const handleCaptchaSuccess = (token) => {
   handleSubmitWithToken()
 }
 
+// отправка отзыва
 const handleSubmit = async () => {
   if (props.visitId) {
     await handleSubmitWithToken()
   } else {
     showCaptcha.value = true
+    await nextTick()
+    renderCaptcha()
   }
 }
 
@@ -75,37 +76,42 @@ const handleSubmitWithToken = async () => {
   captchaToken.value = null
 }
 
-onMounted(() => {
-  const script = document.createElement('script')
-  script.src = 'https://captcha-api.yandex.ru/captcha.js'
-  script.async = true
-  document.head.appendChild(script)
+const renderCaptcha = () => {
+  nextTick(() => {
+    const container = document.querySelector('.smart-captcha')
+    if (container) {
+      container.innerHTML = ''
+      if (window.smartCaptcha) {
+        window.smartCaptcha.render(container, {
+          sitekey: captchaKey,
+          callback: handleCaptchaSuccess,
+        })
+      }
+    }
+  })
+}
 
-  window.handleCaptchaSuccess = handleCaptchaSuccess
-})
-
 onMounted(() => {
-  if (window.smartCaptcha) {
-    window.smartCaptcha.render('captcha-container-id', {
-      sitekey: capthaKey,
-      callback: (token) => {
-        console.log('Captcha token:', token)
-      },
-    })
+  if (!document.querySelector('script[src*="captcha-api.yandex.ru"]')) {
+    const script = document.createElement('script')
+    script.src = 'https://captcha-api.yandex.ru/captcha.js'
+    script.async = true
+    script.onload = () => {
+      window.handleCaptchaSuccess = handleCaptchaSuccess
+    }
+    document.head.appendChild(script)
+  } else {
+    window.handleCaptchaSuccess = handleCaptchaSuccess
   }
 })
 
 watch(price, (newVal) => {
-  if (!newVal) {
-    price.value = ''
-    return
-  }
-  const numeric = newVal.toString().replace(/\D/g, '')
+  const numeric = newVal?.toString().replace(/\D/g, '') ?? ''
   price.value = numeric
 })
 
-watch(publishOnSite, (newVal) => {
-  emit('update:publishOnSite', newVal)
+watch(publishOnSite, (val) => {
+  emit('update:publishOnSite', val)
 })
 </script>
 
