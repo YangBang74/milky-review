@@ -3,7 +3,7 @@ export const useSubmitReview = () => {
   const API_TOKEN = 'Bearer f270cffe34b29e1ac358be26a4490d0fe45835d2'
 
   const submitReview = async ({ visitId, star, comment, photos, selectTags, coffeeIsTrue, publishOnSite }) => {
-    if (!visitId || !star) {
+    if (!star) {
       console.log('Отсутствует ID визита или оценка')
       return false
     }
