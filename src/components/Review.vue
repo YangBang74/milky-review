@@ -1,8 +1,17 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, computed } from 'vue'
+import { useSubmitReview } from './useSubmitReview'
 import Payment from './Payment.vue'
+import tags from './tags.json'
 
-//stats
+// dates
+const visitId = 5
+const coffeeOptions = ['Да', 'Нет']
+const MAX_PHOTOS = 5
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const TOOLTIP_TIMEOUT = 4000
+
+// states
 const star = ref(0)
 const comment = ref('')
 const selectTags = ref([])
@@ -11,132 +20,133 @@ const showPhotoTooltip = ref(false)
 const photos = ref([])
 const inputFileRef = ref(null)
 const coffeeIsTrue = ref('')
-let tooltipTimeout
+const publishOnSite = ref(false)
+let tooltipTimeout = null
 
-//dates
-const badTags = [
-  'Некачественные услуги',
-  'Долгое ожидание',
-  'Невежливый мастер',
-  'Навязывание услуг',
-  'Невежливый администратор',
-  'Поранили',
-  'Было больно',
-  'Нестерильные инструменты ',
-  'Не было угощений',
-  'Невкусный чай/кофе',
-  'Ошибка в стоимости',
-  'Было грязно',
-  'Другое',
-]
+// composables
+const { submitReview, getPayLink } = useSubmitReview()
 
-const normalTags = [
-  'Качество услуг',
-  'Вкус угощений/напитков',
-  'Чистота студии',
-  'Недружелюбный мастер',
-  'Незаботливый администратор',
-  'Фильмы',
-  'Атмосфера',
-  'Ожидание',
-  'Другое',
-]
-
-const goodTags = [
-  'Качество услуг',
-  'Заботливый администратор',
-  'Угощения/напитки',
-  'Дружелюбный мастер',
-  'Интересное кино',
-  'Освежитель воздуха',
-  'Чистота студии',
-  'Атмосфера',
-  '💖',
-]
-
-const coffeeDate = ['Да', 'Нет']
-
-//functions
-const setRating = (value) => {
-  star.value = value
-}
-
-const toggleTag = (item) => {
-  if (selectTags.value.includes(item)) {
-    selectTags.value = selectTags.value.filter((tag) => tag !== item)
-  } else {
-    selectTags.value.push(item)
-  }
-}
-
-const toggleTooltip = () => {
-  showPhotoTooltip.value = true
-  clearTimeout(tooltipTimeout)
-  tooltipTimeout = setTimeout(() => {
-    showPhotoTooltip.value = false
-  }, 4000)
-}
-
-watch(comment, () => {
-  const el = textareaRef.value
-  if (el) {
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }
-})
-
+// function
 const starText = computed(() => {
-  if (star.value <= 3)
+  if (star.value <= 3) {
     return 'Мы постараемся исправить любую проблему. Расскажите, что не понравилось?'
-  if (star.value === 4) return 'Хорошо, но не идеально… На что нам обратить внимание?)'
-  if (star.value === 5) return 'Круууть))) А что больше всего понравилось?'
+  }
+  if (star.value === 4) {
+    return 'Хорошо, но не идеально… На что нам обратить внимание?)'
+  }
+  if (star.value === 5) {
+    return 'Круууть))) А что больше всего понравилось?'
+  }
   return ''
 })
 
 const currentTags = computed(() => {
-  if (star.value <= 3) return badTags
-  if (star.value === 4) return normalTags
-  if (star.value === 5) return goodTags
+  if (star.value <= 3) return tags.bad
+  if (star.value === 4) return tags.normal
+  if (star.value === 5) return tags.good
   return []
 })
 
-// Загрузка фото
-const toBase64 = (file) =>
-  new Promise((resolve, reject) => {
+const setRating = (value) => {
+  star.value = value
+}
+
+const toggleTag = (id) => {
+  selectTags.value = selectTags.value.includes(id)
+    ? selectTags.value.filter(tagId => tagId !== id)
+    : [...selectTags.value, id]
+}
+
+const toggleTooltip = () => {
+  showPhotoTooltip.value = true
+  if (tooltipTimeout) clearTimeout(tooltipTimeout)
+  tooltipTimeout = setTimeout(() => {
+    showPhotoTooltip.value = false
+  }, TOOLTIP_TIMEOUT)
+}
+
+const toBase64 = (file) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.readAsDataURL(file)
     reader.onload = () => resolve(reader.result)
-    reader.onerror = (error) => reject(error)
+    reader.onerror = reject
   })
+}
 
 const onFileChange = async (event) => {
   const files = event.target.files
-  if (!files.length) return
+  if (!files?.length) return
 
-  for (let i = 0; i < files.length; i++) {
-    if (photos.value.length >= 5) break
+  for (const file of Array.from(files)) {
+    if (photos.value.length >= MAX_PHOTOS) break
 
-    const file = files[i]
-
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE) {
       toggleTooltip()
       continue
     }
 
-    const base64 = await toBase64(file)
-    photos.value.push(base64)
+    try {
+      const base64 = await toBase64(file)
+      photos.value = [...photos.value, base64]
+    } catch (error) {
+      console.error('Ошибка при конвертации файла в base64:', error)
+    }
   }
 
-  event.target.value = ''
+  event.target.value = '' 
 }
 
 const openFileDialog = () => {
-  if (photos.value.length >= 5) return
+  if (photos.value.length >= MAX_PHOTOS) return
   inputFileRef.value?.click()
 }
 
 const removePhoto = (index) => {
-  photos.value.splice(index, 1)
+  photos.value = photos.value.filter((_, i) => i !== index)
+}
+
+const resetForm = () => {
+  star.value = 0
+  comment.value = ''
+  selectTags.value = []
+  photos.value = []
+  coffeeIsTrue.value = ''
+  publishOnSite.value = false
+}
+
+const handleSubmit = async ({ tipAmount, publishOnSite }) => {
+  let reviewSuccess = true
+
+  if (star.value > 0) {
+    const payload = {
+      visitId,
+      star: star.value,
+      comment: comment.value,
+      photos: photos.value,
+      selectTags: selectTags.value,
+      coffeeIsTrue: coffeeIsTrue.value,
+      publishOnSite,
+    }
+
+    reviewSuccess = await submitReview(payload)
+    if (!reviewSuccess) {
+      return 
+    }
+  }
+
+  if (tipAmount) {
+    const payLinkData = await getPayLink({ summ: tipAmount, visitId })
+    if (payLinkData && payLinkData.url) {
+      window.location.href = payLinkData.url
+    } else {
+      return
+    }
+  }
+
+  if (reviewSuccess && star.value > 0 && !tipAmount) {
+    resetForm()
+  }
 }
 </script>
 
@@ -224,18 +234,18 @@ const removePhoto = (index) => {
             </p>
             <div class="flex flex-wrap justify-between align-start pt-6 gap-y-[0.9375rem]">
               <button
-                v-for="(tag, index) in currentTags"
-                :key="index"
+                v-for="tag in currentTags"
+                :key="tag.tagId"
                 type="button"
-                @click="toggleTag(tag)"
+                @click="toggleTag(tag.tagId)"
                 :class="[
                   'py-[0.3125rem] border cursor-pointer rounded-4xl px-3 text-sm leading-[1.5625rem] transition-colors duration-150',
-                  selectTags.includes(tag)
+                  selectTags.includes(tag.tagId)
                     ? 'bg-[#274138] text-[#F6F5F2] border-[#274138]'
                     : 'text-[#222]',
                 ]"
               >
-                {{ tag }}
+                {{ tag.title }}
               </button>
             </div>
           </div>
@@ -250,7 +260,7 @@ const removePhoto = (index) => {
           />
         </div>
         <div class="mt-5 mb-6 px-3">
-          <div class="flex justify-start items-center gap-[0.5625rem] px-2">
+          <div class="flex justify-start items-center gap-[0.3125rem] px-2">
             <p>Добавьте фото с вашего визита</p>
             <div class="relative w-fit flex items-center">
               <button @click="toggleTooltip" class="focus:outline-none cursor-pointer">
@@ -370,10 +380,10 @@ const removePhoto = (index) => {
           </div>
         </div>
         <div class="p-5 border-y border-[#ACB5B8]">
-          <p class="text-[#222222] text-center">Предложили ли вам чай или кофе?</p>
+          <p class="text-[#222222] text-center">Предложили ли вам чай или кофе?</p>
           <div class="flex items-center justify-center gap-2.5 mt-2.5">
             <button
-              v-for="coffee in coffeeDate"
+              v-for="coffee in coffeeOptions"
               :key="coffee"
               type="button"
               @click="coffeeIsTrue = coffee"
@@ -391,7 +401,13 @@ const removePhoto = (index) => {
       </div>
     </Transition>
 
-    <Payment :is-comment="textareaRef" />
+    <Payment
+      :is-comment="comment"
+      :on-submit="handleSubmit"
+      :select-star="star"
+      :visit-id="visitId"
+      @update:publishOnSite="publishOnSite = $event"
+    />
   </div>
 </template>
 
@@ -411,7 +427,6 @@ const removePhoto = (index) => {
 }
 
 /* ToolTip style */
-
 .tooltip::before {
   content: '';
   position: absolute;

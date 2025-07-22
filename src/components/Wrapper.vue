@@ -1,5 +1,4 @@
 <script setup>
-import Payment from './Payment.vue'
 import Review from './Review.vue'
 </script>
 <template>

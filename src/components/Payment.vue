@@ -1,32 +1,72 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { useSubmitReview } from './useSubmitReview'
 
-//props
+// props
 const props = defineProps({
-  isComment: Boolean,
+  isComment: String,
+  onSubmit: Function,
+  selectStar: Number,
+  visitId: Number,
 })
+
+// emit
+const emit = defineEmits(['update:publishOnSite'])
 
 // states
 const selectTip = ref(null)
 const otherTip = ref(false)
-const postComment = ref(false)
-const price = ref()
+const publishOnSite = ref(false)
+const price = ref('')
 
-// data
-const tipsDate = [
+// dates
+const tipsOptions = [
   { title: 'Без чаевых', value: null },
-  { title: '99 ₽', value: 99 },
-  { title: '199 ₽', value: 199 },
-  { title: '299 ₽', value: 299 },
+  { title: '99 ₽', value: 99 },
+  { title: '199 ₽', value: 199 },
+  { title: '299 ₽', value: 299 },
 ]
 
-//ruler
-watch(price, (newVal) => {
-  if (newVal === null || newVal === undefined) return
-  const numeric = newVal.toString().replace(/\D/g, '')
-  if (newVal !== numeric) {
-    price.value = numeric
+// composables
+const { getPayLink } = useSubmitReview()
+
+// Math function
+const isSubmitDisabled = () => {
+  return !props.selectStar && !selectTip.value && !price.value
+}
+
+// functions
+const setTip = (value) => {
+  selectTip.value = value
+  if (value !== null) {
+    otherTip.value = false
+    price.value = ''
   }
+}
+
+const toggleOtherTip = () => {
+  otherTip.value = !otherTip.value
+  if (otherTip.value) {
+    selectTip.value = null
+  }
+}
+
+const handleSubmit = async () => {
+  const tipAmount = selectTip.value || (price.value ? parseInt(price.value) : null)
+  await props.onSubmit({ tipAmount, publishOnSite: publishOnSite.value })
+}
+
+watch(price, (newVal) => {
+  if (!newVal) {
+    price.value = ''
+    return
+  }
+  const numeric = newVal.toString().replace(/\D/g, '')
+  price.value = numeric
+})
+
+watch(publishOnSite, (newVal) => {
+  emit('update:publishOnSite', newVal)
 })
 </script>
 
@@ -40,10 +80,10 @@ watch(price, (newVal) => {
 
       <div class="my-5 px-10 flex justify-center flex-row gap-[0.3125rem] flex-nowrap">
         <button
-          v-for="tip in tipsDate"
+          v-for="tip in tipsOptions"
           :key="tip.value"
           type="button"
-          @click="selectTip = tip.value"
+          @click="setTip(tip.value)"
           :class="[
             'h-[3.4375rem] w-15 rounded-[0.3125rem] cursor-pointer border transition',
             selectTip === tip.value
@@ -59,7 +99,7 @@ watch(price, (newVal) => {
       <div class="text-center">
         <button
           type="button"
-          @click="otherTip = !otherTip"
+          @click="toggleOtherTip"
           class="text-[#222] text-sm border-b leading-[0.9375rem] cursor-pointer"
         >
           Другая сумма
@@ -82,20 +122,22 @@ watch(price, (newVal) => {
 
       <div class="px-5 pt-5">
         <button
+          :disabled="isSubmitDisabled()"
           type="button"
-          class="py-[0.9375rem] bg-[#274138] text-white w-full rounded-sm cursor-pointer transition"
+          @click="handleSubmit"
+          class="py-[0.9375rem] bg-[#274138] text-white w-full rounded-sm cursor-pointer transition disabled:bg-[#8C9497]"
         >
-          {{ selectTip ? 'Оставить чаевые' : 'Отправить' }}
+          {{ selectTip || price ? 'Оставить чаевые' : 'Отправить отзыв' }}
         </button>
       </div>
     </div>
     <div v-if="props.isComment" class="pb-[1.0625rem] flex justify-center">
       <button
         type="button"
-        @click="postComment = !postComment"
+        @click="publishOnSite = !publishOnSite"
         class="cursor-pointer flex justify-center items-center gap-[0.1875rem]"
       >
-        <span v-if="postComment">
+        <span v-if="publishOnSite">
           <svg
             width="17"
             height="17"
@@ -127,6 +169,7 @@ watch(price, (newVal) => {
     </div>
   </div>
 </template>
+
 <style scoped>
 /* Transition styles */
 .fade-enter-active,
