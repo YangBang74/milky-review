@@ -19,7 +19,7 @@ const textareaRef = ref(null)
 const showPhotoTooltip = ref(false)
 const photos = ref([])
 const inputFileRef = ref(null)
-const coffeeIsTrue = ref('')
+const coffeeIsTrue = ref('Да')
 const publishOnSite = ref(false)
 let tooltipTimeout = null
 
