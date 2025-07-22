@@ -5,6 +5,7 @@ import Payment from './Payment.vue'
 import tags from './tags.json'
 
 // dates
+const visitId = null
 const coffeeOptions = ['Да', 'Нет']
 const MAX_PHOTOS = 5
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -52,7 +53,7 @@ const setRating = (value) => {
 
 const toggleTag = (id) => {
   selectTags.value = selectTags.value.includes(id)
-    ? selectTags.value.filter(tagId => tagId !== id)
+    ? selectTags.value.filter((tagId) => tagId !== id)
     : [...selectTags.value, id]
 }
 
@@ -93,7 +94,7 @@ const onFileChange = async (event) => {
     }
   }
 
-  event.target.value = '' 
+  event.target.value = ''
 }
 
 const openFileDialog = () => {
@@ -130,7 +131,7 @@ const handleSubmit = async ({ tipAmount, publishOnSite }) => {
 
     reviewSuccess = await submitReview(payload)
     if (!reviewSuccess) {
-      return 
+      return
     }
   }
 

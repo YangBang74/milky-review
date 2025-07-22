@@ -28,8 +28,7 @@ const tipsOptions = [
   { title: '299 ₽', value: 299 },
 ]
 const capthaKey = import.meta.env.VITE_CAPTCHA_KEY
-console.log(capthaKey);
-
+console.log(capthaKey)
 
 // Math function
 const isSubmitDisabled = () => {
@@ -83,6 +82,17 @@ onMounted(() => {
   document.head.appendChild(script)
 
   window.handleCaptchaSuccess = handleCaptchaSuccess
+})
+
+onMounted(() => {
+  if (window.smartCaptcha) {
+    window.smartCaptcha.render('captcha-container-id', {
+      sitekey: capthaKey,
+      callback: (token) => {
+        console.log('Captcha token:', token)
+      },
+    })
+  }
 })
 
 watch(price, (newVal) => {
