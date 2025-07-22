@@ -29,6 +29,8 @@ const tipsOptions = [
   { title: '299 ₽', value: 299 },
 ]
 const capthaKey = import.meta.env.VITE_CAPTCHA_KEY
+console.log(capthaKey);
+
 
 // Math function
 const isSubmitDisabled = () => {
