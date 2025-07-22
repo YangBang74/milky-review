@@ -5,7 +5,6 @@ import Payment from './Payment.vue'
 import tags from './tags.json'
 
 // dates
-const visitId = 5
 const coffeeOptions = ['Да', 'Нет']
 const MAX_PHOTOS = 5
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB

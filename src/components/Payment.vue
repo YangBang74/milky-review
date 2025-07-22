@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useSubmitReview } from './useSubmitReview'
 
 // props
@@ -18,6 +18,8 @@ const selectTip = ref(null)
 const otherTip = ref(false)
 const publishOnSite = ref(false)
 const price = ref('')
+const showCaptcha = ref(false)
+const captchaToken = ref(null)
 
 // dates
 const tipsOptions = [
@@ -26,9 +28,7 @@ const tipsOptions = [
   { title: '199 ₽', value: 199 },
   { title: '299 ₽', value: 299 },
 ]
-
-// composables
-const { getPayLink } = useSubmitReview()
+const capthaKey = import.meta.env.VITE_CAPTCHA_KEY
 
 // Math function
 const isSubmitDisabled = () => {
@@ -51,10 +51,38 @@ const toggleOtherTip = () => {
   }
 }
 
-const handleSubmit = async () => {
-  const tipAmount = selectTip.value || (price.value ? parseInt(price.value) : null)
-  await props.onSubmit({ tipAmount, publishOnSite: publishOnSite.value })
+const handleCaptchaSuccess = (token) => {
+  captchaToken.value = token
+  showCaptcha.value = false
+  handleSubmitWithToken()
 }
+
+const handleSubmit = async () => {
+  if (props.visitId) {
+    await handleSubmitWithToken()
+  } else {
+    showCaptcha.value = true
+  }
+}
+
+const handleSubmitWithToken = async () => {
+  const tipAmount = selectTip.value || (price.value ? parseInt(price.value) : null)
+  await props.onSubmit({
+    tipAmount,
+    publishOnSite: publishOnSite.value,
+    captchaToken: captchaToken.value,
+  })
+  captchaToken.value = null
+}
+
+onMounted(() => {
+  const script = document.createElement('script')
+  script.src = 'https://captcha-api.yandex.ru/captcha.js'
+  script.async = true
+  document.head.appendChild(script)
+
+  window.handleCaptchaSuccess = handleCaptchaSuccess
+})
 
 watch(price, (newVal) => {
   if (!newVal) {
@@ -167,6 +195,15 @@ watch(publishOnSite, (newVal) => {
         <span class="text-sm font-light">Опубликовать отзыв на сайте</span>
       </button>
     </div>
+    <Transition name="fade">
+      <div v-if="showCaptcha" class="p-5 text-center">
+        <div
+          class="smart-captcha"
+          :data-sitekey="capthaKey"
+          data-callback="handleCaptchaSuccess"
+        ></div>
+      </div>
+    </Transition>
   </div>
 </template>
 
