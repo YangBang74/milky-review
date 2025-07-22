@@ -1,6 +1,5 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useSubmitReview } from './useSubmitReview'
 
 // props
 const props = defineProps({
@@ -201,7 +200,7 @@ watch(publishOnSite, (newVal) => {
       <div v-if="showCaptcha" class="p-5 text-center">
         <div
           class="smart-captcha"
-          data-sitekey="ysc1_CJbaciJkIcnCK6YkmJSDWUMQ6DvxXrDbcszGdvcV3914f354"
+          :data-sitekey="capthaKey"
           data-callback="handleCaptchaSuccess"
         ></div>
       </div>
