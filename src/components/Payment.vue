@@ -201,7 +201,7 @@ watch(publishOnSite, (newVal) => {
       <div v-if="showCaptcha" class="p-5 text-center">
         <div
           class="smart-captcha"
-          :data-sitekey="capthaKey"
+          data-sitekey="ysc1_CJbaciJkIcnCK6YkmJSDWUMQ6DvxXrDbcszGdvcV3914f354"
           data-callback="handleCaptchaSuccess"
         ></div>
       </div>
