@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 
-defineProps({
+const props = defineProps({
   rating: Number,
   comment: String,
 })
@@ -9,12 +9,12 @@ defineProps({
 const showSuccess = ref(true)
 
 function copyComment() {
-  navigator.clipboard.writeText(comment)
+  navigator.clipboard.writeText(props.comment)
 }
 </script>
 <template>
   <div
-    v-if="rating < 5 && showSuccess"
+    v-if="props.rating < 5 && showSuccess"
     class="max-w-[21.1875rem] w-full bg-[#274138] relative rounded-[1.125rem] mt-5 pt-8.5 px-9 pb-12 text-white"
   >
     <button
@@ -52,7 +52,7 @@ function copyComment() {
     </div>
   </div>
   <div
-    v-if="rating === 5 && comment && showSuccess"
+    v-if="props.rating === 5 && comment && showSuccess"
     class="max-w-[21.1875rem] w-full bg-[#274138] relative rounded-[1.125rem] mt-5 pt-8.5 px-6.5 pb-8 text-white"
   >
     <button
@@ -145,7 +145,7 @@ function copyComment() {
     </a>
   </div>
   <div
-    v-if="rating === 5 && !comment && showSuccess"
+    v-if="props.rating === 5 && !comment && showSuccess"
     class="max-w-[21.1875rem] w-full bg-[#274138] relative rounded-[1.125rem] mt-5 pt-8.5 px-6.5 pb-8 text-white"
   >
     <button
