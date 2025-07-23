@@ -19,7 +19,7 @@ const showPhotoTooltip = ref(false)
 const photos = ref([])
 const inputFileRef = ref(null)
 const coffeeIsTrue = ref('Да')
-const publishOnSite = ref(false)
+const publishOnSite = ref(true)
 const showCaptcha = ref(false)
 const captchaToken = ref(null)
 let tooltipTimeout = null
@@ -104,7 +104,7 @@ const resetForm = () => {
   selectTags.value = []
   photos.value = []
   coffeeIsTrue.value = ''
-  publishOnSite.value = false
+  publishOnSite.value = true
   captchaToken.value = null
 }
 
@@ -182,10 +182,10 @@ onMounted(() => {
 
 <template>
   <div
-    class="bg-black/20 absolute inset-0 w-full h-full flex-col items-center flex overflow-y-auto"
+    class="bg-black/20 absolute inset-0 w-full h-full flex flex-col items-center overflow-y-auto"
   >
     <div
-      :class="['max-w-[23.4375rem]', 'w-full', 'z-50', 'bg-white', star > 0 ? 'h-full' : 'h-auto']"
+      class="max-w-[23.4375rem] w-full z-50 bg-white flex flex-col min-h-full"
     >
       <a href="#" class="bg-[#274138] py-5 flex justify-center">
         <svg
@@ -258,9 +258,9 @@ onMounted(() => {
         </div>
       </div>
 
-      <Transition name="fade">
-        <div v-if="star > 0" class="bg-[#F6F5F2] pt-5">
-          <Transition name="fade">
+      <div class="flex-grow overflow-y-auto">
+        <Transition name="fade">
+          <div v-if="star > 0" class="bg-[#F6F5F2] pt-5">
             <div v-if="star" class="px-4">
               <p class="text-lg leading-6 text-center text-[#222222] px-1">{{ starText }}</p>
               <div class="flex flex-wrap justify-between align-start pt-6 gap-y-[0.9375rem]">
@@ -280,211 +280,213 @@ onMounted(() => {
                 </button>
               </div>
             </div>
-          </Transition>
 
-          <div class="my-5 px-3">
-            <textarea
-              v-model="comment"
-              ref="textareaRef"
-              placeholder="Ваш комментарий"
-              class="bg-white w-full p-[0.9375rem] focus:outline-0 resize-none rounded-md overflow-hidden"
-            />
-          </div>
-          <div class="mt-5 mb-6 px-3">
-            <div class="flex justify-start items-center gap-[0.3125rem] px-2">
-              <p>Добавьте фото с вашего визита</p>
-              <div class="relative w-fit flex items-center">
-                <button @click="toggleTooltip" class="focus:outline-none cursor-pointer">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <circle cx="8" cy="8" r="7.5" stroke="#8C9497" />
-                    <rect x="7.5" y="6.22266" width="1" height="6.22222" rx="0.5" fill="#8C9497" />
-                    <circle cx="8" cy="4.75" r="0.75" fill="#8C9497" />
-                  </svg>
-                </button>
+            <div class="my-5 px-3">
+              <textarea
+                v-model="comment"
+                ref="textareaRef"
+                placeholder="Ваш комментарий"
+                class="bg-white w-full p-[0.9375rem] focus:outline-0 resize-none rounded-md overflow-hidden"
+              />
+            </div>
+            <div class="mt-5 mb-6 px-3">
+              <div class="flex justify-start items-center gap-[0.3125rem] px-2">
+                <p>Добавьте фото с вашего визита</p>
+                <div class="relative w-fit flex items-center">
+                  <button @click="toggleTooltip" class="focus:outline-none cursor-pointer">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="7.5" stroke="#8C9497" />
+                      <rect x="7.5" y="6.22266" width="1" height="6.22222" rx="0.5" fill="#8C9497" />
+                      <circle cx="8" cy="4.75" r="0.75" fill="#8C9497" />
+                    </svg>
+                  </button>
+                  <Transition name="fade">
+                    <div
+                      v-show="showPhotoTooltip"
+                      class="tooltip absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-xs rounded px-2 py-1 whitespace-nowrap z-10 bg-white text-[#8C9497]"
+                    >
+                      не более 5Мб
+                    </div>
+                  </Transition>
+                </div>
+              </div>
+              <div class="flex items-center justify-start gap-2.5 flex-row flex-nowrap">
+                <TransitionGroup
+                  name="fade"
+                  tag="div"
+                  v-if="photos.length > 0"
+                  class="flex flex-wrap gap-2 mt-3 px-2"
+                >
+                  <div v-for="(photo, index) in photos" :key="photo" class="relative w-12.5 h-12.5">
+                    <img :src="photo" alt="photo" class="object-cover w-full h-full rounded" />
+                    <button
+                      @click="removePhoto(index)"
+                      type="button"
+                      class="absolute -top-2 -right-2 bg-white bg-opacity-50 text-white w-5 h-5 flex items-center justify-center rounded-full cursor-pointer"
+                      aria-label="Удалить фото"
+                    >
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 8 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          clip-rule="evenodd"
+                          d="M0.146444 7.14584C-0.0488147 7.3411 -0.0488147 7.65769 0.146444 7.85296C0.341703 8.04822 0.65828 8.04822 0.853539 7.85296L3.99953 4.70686L7.14559 7.85302C7.34085 8.04829 7.65743 8.04829 7.85269 7.85302C8.04795 7.65776 8.04795 7.34117 7.85269 7.14591L4.70663 3.99974L7.85269 0.853568C8.04795 0.658302 8.04795 0.341715 7.85269 0.146449C7.65743 -0.0488162 7.34085 -0.0488167 7.14559 0.146449L3.99953 3.29262L0.853539 0.146515C0.65828 -0.0487502 0.341703 -0.0487502 0.146444 0.146515C-0.0488147 0.341781 -0.0488147 0.658369 0.146444 0.853634L3.29244 3.99974L0.146444 7.14584Z"
+                          fill="#274138"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </TransitionGroup>
+
                 <Transition name="fade">
-                  <div
-                    v-show="showPhotoTooltip"
-                    class="tooltip absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-xs rounded px-2 py-1 whitespace-nowrap z-10 bg-white text-[#8C9497]"
-                  >
-                    не более 5Мб
+                  <div v-if="photos.length < 5" class="mt-2.5 flex items-center justify-start px-2">
+                    <button
+                      type="button"
+                      @click="openFileDialog"
+                      class="bg-white p-[0.8125rem] w-12.5 h-12.5 cursor-pointer rounded"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <mask
+                          id="mask0_13922_8210"
+                          style="mask-type: alpha"
+                          maskUnits="userSpaceOnUse"
+                          x="1"
+                          y="0"
+                          width="23"
+                          height="23"
+                        >
+                          <rect x="1.5" width="22.5" height="22.5" fill="#D9D9D9" />
+                        </mask>
+                        <g mask="url(#mask0_13922_8210)">
+                          <path
+                            d="M20.0305 8.90634V18.9696C20.0305 19.4878 19.6104 19.9079 19.0922 19.9079H3.37579C2.85759 19.9079 2.4375 19.4878 2.4375 18.9696V7.58549C2.4375 7.06728 2.85759 6.6472 3.37579 6.6472H5.90083C6.21065 6.6472 6.5005 6.49425 6.67537 6.2385L7.87578 4.48291C8.05065 4.22716 8.3405 4.07422 8.65032 4.07422H11.234H15.1924"
+                            stroke="#274138"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                          />
+                          <circle
+                            cx="11.4543"
+                            cy="12.2112"
+                            r="3.13851"
+                            stroke="#274138"
+                            stroke-width="1.2"
+                            stroke-linecap="round"
+                          />
+                          <rect x="19.5" y="1" width="1" height="6" rx="0.5" fill="#274138" />
+                          <rect
+                            x="17"
+                            y="4.5"
+                            width="1"
+                            height="6"
+                            rx="0.5"
+                            transform="rotate(-90 17 4.5)"
+                            fill="#274138"
+                          />
+                        </g>
+                      </svg>
+                    </button>
+                    <input
+                      type="file"
+                      ref="inputFileRef"
+                      accept="image/*"
+                      multiple
+                      class="hidden"
+                      @change="onFileChange"
+                    />
                   </div>
                 </Transition>
               </div>
             </div>
-            <div class="flex items-center justify-start gap-2.5 flex-row flex-nowrap">
-              <TransitionGroup
-                name="fade"
-                tag="div"
-                v-if="photos.length > 0"
-                class="flex flex-wrap gap-2 mt-3 px-2"
-              >
-                <div v-for="(photo, index) in photos" :key="photo" class="relative w-12.5 h-12.5">
-                  <img :src="photo" alt="photo" class="object-cover w-full h-full rounded" />
-                  <button
-                    @click="removePhoto(index)"
-                    type="button"
-                    class="absolute -top-2 -right-2 bg-white bg-opacity-50 text-white w-5 h-5 flex items-center justify-center rounded-full cursor-pointer"
-                    aria-label="Удалить фото"
-                  >
-                    <svg
-                      width="8"
-                      height="8"
-                      viewBox="0 0 8 8"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        d="M0.146444 7.14584C-0.0488147 7.3411 -0.0488147 7.65769 0.146444 7.85296C0.341703 8.04822 0.65828 8.04822 0.853539 7.85296L3.99953 4.70686L7.14559 7.85302C7.34085 8.04829 7.65743 8.04829 7.85269 7.85302C8.04795 7.65776 8.04795 7.34117 7.85269 7.14591L4.70663 3.99974L7.85269 0.853568C8.04795 0.658302 8.04795 0.341715 7.85269 0.146449C7.65743 -0.0488162 7.34085 -0.0488167 7.14559 0.146449L3.99953 3.29262L0.853539 0.146515C0.65828 -0.0487502 0.341703 -0.0487502 0.146444 0.146515C-0.0488147 0.341781 -0.0488147 0.658369 0.146444 0.853634L3.29244 3.99974L0.146444 7.14584Z"
-                        fill="#274138"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </TransitionGroup>
-
-              <Transition name="fade">
-                <div v-if="photos.length < 5" class="mt-2.5 flex items-center justify-start px-2">
-                  <button
-                    type="button"
-                    @click="openFileDialog"
-                    class="bg-white p-[0.8125rem] w-12.5 h-12.5 cursor-pointer rounded"
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <mask
-                        id="mask0_13922_8210"
-                        style="mask-type: alpha"
-                        maskUnits="userSpaceOnUse"
-                        x="1"
-                        y="0"
-                        width="23"
-                        height="23"
-                      >
-                        <rect x="1.5" width="22.5" height="22.5" fill="#D9D9D9" />
-                      </mask>
-                      <g mask="url(#mask0_13922_8210)">
-                        <path
-                          d="M20.0305 8.90634V18.9696C20.0305 19.4878 19.6104 19.9079 19.0922 19.9079H3.37579C2.85759 19.9079 2.4375 19.4878 2.4375 18.9696V7.58549C2.4375 7.06728 2.85759 6.6472 3.37579 6.6472H5.90083C6.21065 6.6472 6.5005 6.49425 6.67537 6.2385L7.87578 4.48291C8.05065 4.22716 8.3405 4.07422 8.65032 4.07422H11.234H15.1924"
-                          stroke="#274138"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                        />
-                        <circle
-                          cx="11.4543"
-                          cy="12.2112"
-                          r="3.13851"
-                          stroke="#274138"
-                          stroke-width="1.2"
-                          stroke-linecap="round"
-                        />
-                        <rect x="19.5" y="1" width="1" height="6" rx="0.5" fill="#274138" />
-                        <rect
-                          x="17"
-                          y="4.5"
-                          width="1"
-                          height="6"
-                          rx="0.5"
-                          transform="rotate(-90 17 4.5)"
-                          fill="#274138"
-                        />
-                      </g>
-                    </svg>
-                  </button>
-                  <input
-                    type="file"
-                    ref="inputFileRef"
-                    accept="image/*"
-                    multiple
-                    class="hidden"
-                    @change="onFileChange"
-                  />
-                </div>
-              </Transition>
+            <div class="p-5 border-y border-[#ACB5B8]">
+              <p class="text-[#222222] text-center">Предложили ли вам чай или кофе?</p>
+              <div class="flex items-center justify-center gap-2.5 mt-2.5">
+                <button
+                  v-for="coffee in coffeeOptions"
+                  :key="coffee"
+                  type="button"
+                  @click="coffeeIsTrue = coffee"
+                  :class="[
+                    'border cursor-pointer rounded-sm transition-colors text-sm duration-150 w-12.5 h-10',
+                    coffeeIsTrue === coffee
+                      ? 'bg-[#274138] text-[#F6F5F2] border-[#274138]'
+                      : 'text-[#222] border-[#8C9497] bg-white',
+                  ]"
+                >
+                  {{ coffee }}
+                </button>
+              </div>
             </div>
           </div>
-          <div class="p-5 border-y border-[#ACB5B8]">
-            <p class="text-[#222222] text-center">Предложили ли вам чай или кофе?</p>
-            <div class="flex items-center justify-center gap-2.5 mt-2.5">
-              <button
-                v-for="coffee in coffeeOptions"
-                :key="coffee"
-                type="button"
-                @click="coffeeIsTrue = coffee"
-                :class="[
-                  'border cursor-pointer rounded-sm transition-colors text-sm duration-150 w-12.5 h-10',
-                  coffeeIsTrue === coffee
-                    ? 'bg-[#274138] text-[#F6F5F2] border-[#274138]'
-                    : 'text-[#222] border-[#8C9497] bg-white',
-                ]"
-              >
-                {{ coffee }}
-              </button>
-            </div>
+        </Transition>
+        <Transition name="fade">
+          <div v-if="showCaptcha" class="p-5 text-center bg-white">
+            <div
+              class="smart-captcha"
+              :data-sitekey="captchaKey"
+              data-callback="handleCaptchaSuccess"
+            ></div>
           </div>
-        </div>
-      </Transition>
-      <div class="px-5 py-5 bg-white">
-        <button
-          :disabled="!star"
-          type="button"
-          @click="handleSubmit"
-          class="py-[0.9375rem] bg-[#274138] text-white w-full rounded-sm cursor-pointer transition disabled:bg-[#8C9497]"
-        >
-          Отправить отзыв
-        </button>
+        </Transition>
       </div>
-      <div v-if="comment" class="pb-[1.0625rem] flex justify-center bg-white">
-        <button
-          type="button"
-          @click="publishOnSite = !publishOnSite"
-          class="cursor-pointer flex justify-center items-center gap-[0.1875rem]"
-        >
-          <span v-if="publishOnSite">
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 17 17"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="8.5" cy="8.5" r="8.5" fill="#274138" />
-              <path
-                d="M4.85742 8.50033L7.45946 11.3337L12.1431 5.66699"
-                stroke="white"
-                stroke-width="2"
-              />
-            </svg>
-          </span>
-          <span v-else>
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 17 17"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="8.5" cy="8.5" r="7.5" stroke="#375B4F" stroke-width="2" />
-            </svg>
-          </span>
-          <span class="text-sm font-light">Опубликовать отзыв на сайте</span>
-        </button>
-      </div>
-      <Transition name="fade">
-        <div v-if="showCaptcha" class="p-5 text-center bg-white">
-          <div
-            class="smart-captcha"
-            :data-sitekey="captchaKey"
-            data-callback="handleCaptchaSuccess"
-          ></div>
+      <div class="bg-white sticky bottom-0 z-10">
+        <div class="px-5 py-5">
+          <button
+            :disabled="!star"
+            type="button"
+            @click="handleSubmit"
+            class="py-[0.9375rem] bg-[#274138] text-white w-full rounded-sm cursor-pointer transition disabled:bg-[#8C9497]"
+          >
+            Отправить отзыв
+          </button>
         </div>
-      </Transition>
+        <div class="pb-[1.0625rem] flex justify-center">
+          <button
+            type="button"
+            @click="publishOnSite = !publishOnSite"
+            class="cursor-pointer flex justify-center items-center gap-[0.1875rem]"
+          >
+            <span v-if="publishOnSite">
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 17 17"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="8.5" cy="8.5" r="8.5" fill="#274138" />
+                <path
+                  d="M4.85742 8.50033L7.45946 11.3337L12.1431 5.66699"
+                  stroke="white"
+                  stroke-width="2"
+                />
+              </svg>
+            </span>
+            <span v-else>
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 17 17"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="8.5" cy="8.5" r="7.5" stroke="#375B4F" stroke-width="2" />
+              </svg>
+            </span>
+            <span class="text-sm font-light">Опубликовать отзыв на сайте</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
