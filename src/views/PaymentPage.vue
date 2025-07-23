@@ -21,9 +21,9 @@ const handleSubmit = async ({ tipAmount }) => {
 </script>
 <template>
   <div
-    class="bg-black/20 absolute inset-0 w-full h-full flex-col items-center flex overflow-y-auto"
+    class="bg-black/20 absolute inset-0 w-full flex-col items-center flex overflow-y-auto"
   >
-    <div class="max-w-[23.4375rem] w-full z-50 h-full bg-white">
+    <div class="max-w-[23.4375rem] w-full z-50 bg-white">
       <a href="#" class="bg-[#274138] py-5 flex justify-center">
         <svg
           width="110"

@@ -109,57 +109,55 @@ watch(publishOnSite, (val) => {
         </div>
       </Transition>
     </div>
-    <div class="fixed bottom-0 left-0 right-0 max-w-[23.4375rem] mx-auto bg-white z-50">
-      <div class="px-5 pt-5 pb-[1.0625rem]">
-        <button
-          :disabled="isSubmitDisabled()"
-          type="button"
-          @click="handleSubmit"
-          class="py-[0.9375rem] bg-[#274138] text-white w-full rounded-sm cursor-pointer transition disabled:bg-[#8C9497]"
-        >
-          {{ selectTip || price || props.isPayment ? 'Оставить чаевые' : 'Отправить отзыв' }}
-        </button>
-      </div>
-      <div class="pb-[1.0625rem] flex justify-center">
-        <button
-          type="button"
-          @click="publishOnSite = !publishOnSite"
-          class="cursor-pointer flex justify-center items-center gap-[0.1875rem]"
-        >
-          <span v-if="publishOnSite">
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 17 17"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="8.5" cy="8.5" r="8.5" fill="#274138" />
-              <path
-                d="M4.85742 8.50033L7.45946 11.3337L12.1431 5.66699"
-                stroke="white"
-                stroke-width="2"
-              />
-            </svg>
-          </span>
-          <span v-else>
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 17 17"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="8.5" cy="8.5" r="7.5" stroke="#375B4F" stroke-width="2" />
-            </svg>
-          </span>
-          <span class="text-sm font-light">Опубликовать отзыв на сайте</span>
-        </button>
-      </div>
-      <Transition name="fade">
-        <slot v-if="showCaptcha" name="captcha"></slot>
-      </Transition>
+    <div class="px-5 pt-5 pb-[1.0625rem]">
+      <button
+        :disabled="isSubmitDisabled()"
+        type="button"
+        @click="handleSubmit"
+        class="py-[0.9375rem] bg-[#274138] text-white w-full rounded-sm cursor-pointer transition disabled:bg-[#8C9497]"
+      >
+        {{ selectTip || price || props.isPayment ? 'Оставить чаевые' : 'Отправить отзыв' }}
+      </button>
     </div>
+    <div class="pb-[1.0625rem] flex justify-center">
+      <button
+        type="button"
+        @click="publishOnSite = !publishOnSite"
+        class="cursor-pointer flex justify-center items-center gap-[0.1875rem]"
+      >
+        <span v-if="publishOnSite">
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 17 17"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="8.5" cy="8.5" r="8.5" fill="#274138" />
+            <path
+              d="M4.85742 8.50033L7.45946 11.3337L12.1431 5.66699"
+              stroke="white"
+              stroke-width="2"
+            />
+          </svg>
+        </span>
+        <span v-else>
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 17 17"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="8.5" cy="8.5" r="7.5" stroke="#375B4F" stroke-width="2" />
+          </svg>
+        </span>
+        <span class="text-sm font-light">Опубликовать отзыв на сайте</span>
+      </button>
+    </div>
+    <Transition name="fade">
+      <slot v-if="showCaptcha" name="captcha"></slot>
+    </Transition>
   </div>
 </template>
 
@@ -177,5 +175,4 @@ watch(publishOnSite, (val) => {
 .fade-leave-from {
   opacity: 1;
 }
-
 </style>
