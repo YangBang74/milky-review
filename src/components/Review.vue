@@ -1,14 +1,23 @@
-<!-- New Component: ReviewForm.vue -->
 <script setup>
 import { ref, computed } from 'vue'
 import tags from '@/components/tags.json'
 
 const props = defineProps({
   starText: String,
-  visitId: Number,  // If this prop is provided, show submit button
+  visitId: Number,
+  studioName: String,
+  visitDate: String,
+  review: Boolean,
 })
 
-const emit = defineEmits(['submit', 'update:star', 'update:comment', 'update:selectTags', 'update:photos', 'update:coffeeIsTrue'])
+const emit = defineEmits([
+  'submit',
+  'update:star',
+  'update:comment',
+  'update:selectTags',
+  'update:photos',
+  'update:coffeeIsTrue',
+])
 
 const star = defineModel('star')
 const comment = defineModel('comment')
@@ -38,11 +47,12 @@ const setRating = (value) => {
   emit('update:star', value)
 }
 
-const toggleTag = (id) => {
-  selectTags.value = selectTags.value.includes(id)
-    ? selectTags.value.filter((tagId) => tagId !== id)
-    : [...selectTags.value, id]
-  emit('update:selectTags', selectTags.value)
+const toggleTag = (tagId) => {
+  if (selectTags.value.includes(tagId)) {
+    selectTags.value = selectTags.value.filter((id) => id !== tagId)
+  } else {
+    selectTags.value = [...selectTags.value, tagId]
+  }
 }
 
 const toggleTooltip = () => {
@@ -75,7 +85,6 @@ const onFileChange = async (event) => {
     try {
       const base64 = await toBase64(file)
       photos.value = [...photos.value, base64]
-      emit('update:photos', photos.value)
     } catch (error) {
       console.error('Ошибка при конвертации файла в base64:', error)
     }
@@ -90,7 +99,6 @@ const openFileDialog = () => {
 
 const removePhoto = (index) => {
   photos.value = photos.value.filter((_, i) => i !== index)
-  emit('update:photos', photos.value)
 }
 
 const handleChildSubmit = (data) => {
@@ -102,7 +110,7 @@ const handleChildSubmit = (data) => {
   <div class="px-[3.875rem] py-[1.875rem] flex flex-col justify-center">
     <p class="text-xl text-center">Как вам визит?</p>
     <div class="flex items-center justify-center text-[#8C9497] font-light text-sm pt-[0.3125rem]">
-      21.05.2022 | Студия на Арбате
+      {{ props.visitDate }} | {{ props.studioName }}
     </div>
     <div class="flex items-center justify-center pt-[1.1044rem]">
       <div class="flex justify-center gap-2">
@@ -165,14 +173,7 @@ const handleChildSubmit = (data) => {
             <button @click="toggleTooltip" class="focus:outline-none cursor-pointer">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="7.5" stroke="#8C9497" />
-                <rect
-                  x="7.5"
-                  y="6.22266"
-                  width="1"
-                  height="6.22222"
-                  rx="0.5"
-                  fill="#8C9497"
-                />
+                <rect x="7.5" y="6.22266" width="1" height="6.22222" rx="0.5" fill="#8C9497" />
                 <circle cx="8" cy="4.75" r="0.75" fill="#8C9497" />
               </svg>
             </button>
@@ -306,7 +307,11 @@ const handleChildSubmit = (data) => {
     </div>
   </Transition>
   <!-- Conditional submit button if visitId prop is provided (standalone mode) -->
-  <button v-if="visitId" @click="handleChildSubmit({ tipAmount: 0, publishOnSite: true })" class="submit-button">
+  <button
+    v-if="review"
+    @click="handleChildSubmit({ tipAmount: 0, publishOnSite: true })"
+    class="submit-button"
+  >
     Отправить отзыв
   </button>
 </template>
@@ -342,7 +347,7 @@ const handleChildSubmit = (data) => {
 .submit-button {
   /* Style as per your design */
   background-color: #274138;
-  color: #F6F5F2;
+  color: #f6f5f2;
   padding: 10px;
   border-radius: 4px;
   margin: 10px;

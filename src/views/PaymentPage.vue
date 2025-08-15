@@ -8,6 +8,8 @@ const props = defineProps({
   masterId: Number,
 })
 
+console.log(props.masterId)
+
 const paymentBlock = ref(false)
 
 const { getPayLink } = useSubmitReview()

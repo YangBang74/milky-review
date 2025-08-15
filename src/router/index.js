@@ -6,7 +6,7 @@ import SuccessReview from '@/views/SuccessReview.vue'
 
 const routes = [
   { path: '/', name: 'ReviewPay', component: ReviewPay },
-  { path: '/payment', name: 'Payment', component: PaymentPage },
+  { path: '/payment', name: 'Payment', component: PaymentPage, props: { masterId: 4 } },
   { path: '/review', name: 'Review', component: ReviewPage },
   {
     path: '/success',

@@ -1,26 +1,25 @@
-<!-- Original Component (updated to use the new ReviewForm component) -->
 <script setup>
 import { ref, computed } from 'vue'
 import { useSubmitReview } from '@/components/useSubmitReview'
 import { useRouter } from 'vue-router'
 import Payment from '@/components/Payment.vue'
 import ReviewHead from '@/components/ReviewHead.vue'
-import Review from '@/components/Review.vue' // Import the new component
+import Review from '@/components/Review.vue'
 
-const props = defineProps({
-  visitId: Number,
-})
+const visitId = 2
 
 const { submitReview, getPayLink } = useSubmitReview()
 const router = useRouter()
 
-// Refs and logic that were outside the extracted block remain here
+// Refs
 const star = ref(0)
+const reviewBlock = ref(false)
 const comment = ref('')
 const selectTags = ref([])
 const photos = ref([])
 const coffeeIsTrue = ref('')
 const publishOnSite = ref(false)
+const isRating = ref(false)
 
 // Computed and methods that interact with the form
 const starText = computed(() => {
@@ -35,7 +34,6 @@ const handleSubmit = async ({ tipAmount, publishOnSite }) => {
   let reviewSuccess = true
   if (star.value > 0) {
     const payload = {
-      visitId: props.visitId,
       star: star.value,
       comment: comment.value,
       photos: photos.value,
@@ -48,6 +46,7 @@ const handleSubmit = async ({ tipAmount, publishOnSite }) => {
       alert('Ошибка при отправке отзыва, попробуйте позже.')
       return
     }
+    isRating.value = true
   }
 
   if (tipAmount) {
@@ -80,31 +79,59 @@ const resetForm = () => {
 </script>
 
 <template>
-  <div class="bg-black/20 absolute inset-0 w-full flex-col items-center flex h-full overflow-y-auto">
-    <div :class="['max-w-[23.4375rem]', 'w-full', 'z-50', 'bg-white', star > 0 ? 'h-auto' : 'h-auto']">
-      <div>
-        <ReviewHead />
-        <!-- Use the new ReviewForm component here -->
-        <Review
-          v-model:star="star"
-          v-model:comment="comment"
-          v-model:selectTags="selectTags"
-          v-model:photos="photos"
-          v-model:coffeeIsTrue="coffeeIsTrue"
-          :starText="starText"
-          :visitId="visitId" 
-          @submit="handleSubmit"
-        />
-      </div>
-      <Payment
-        :is-comment="comment"
-        :on-submit="handleSubmit"
-        :select-star="star"
-        :visit-id="visitId"
-        @update:publishOnSite="publishOnSite = $event"
-      />
-    </div>
+  <ReviewBlock v-if="isRating" :rating="rating" :comment="comment" />
+  <div class="flex justify-center items-center h-screen">
+    <button
+      type="button"
+      @click="reviewBlock = !reviewBlock"
+      class="cursor-pointer bg-black text-white font-semibold px-6 py-2 flex justify-center items-center gap-[0.1875rem]"
+    >
+      <span class="text-sm font-light">Оставить отзыв и чаевые</span>
+    </button>
   </div>
+
+  <Teleport to="body">
+    <Transition name="fade">
+      <div
+        v-if="reviewBlock"
+        class="bg-black/20 absolute inset-0 w-full flex-col justify-center items-center flex h-full overflow-y-auto"
+      >
+        <div
+          :class="[
+            'max-w-[23.4375rem]',
+            'w-full',
+            'z-50',
+            'bg-white',
+            star > 0 ? 'h-full' : 'h-auto',
+          ]"
+        >
+          <div>
+            <ReviewHead />
+            <!-- Use the new ReviewForm component here -->
+            <Review
+              v-model:star="star"
+              v-model:comment="comment"
+              v-model:selectTags="selectTags"
+              v-model:photos="photos"
+              v-model:coffeeIsTrue="coffeeIsTrue"
+              :starText="starText"
+              studio-name="Студия на Арбате"
+              visit-date="21.05.2025"
+              :visitId="visitId"
+              @submit="handleSubmit"
+            />
+          </div>
+          <Payment
+            :is-comment="comment"
+            :on-submit="handleSubmit"
+            :select-star="star"
+            :visit-id="visitId"
+            @update:publishOnSite="publishOnSite = $event"
+          />
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
