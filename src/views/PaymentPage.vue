@@ -38,7 +38,6 @@ const handleSubmit = async ({ tipAmount }) => {
     <Transition name="fade">
       <div
         v-if="paymentBlock"
-        @click.stop="paymentBlock = !paymentBlock"
         class="bg-black/20 absolute inset-0 w-full z-0 flex-col justify-center items-center flex overflow-y-auto"
       >
         <div class="max-w-[23.4375rem] w-full z-50 bg-white">
