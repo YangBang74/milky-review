@@ -78,7 +78,6 @@ export const useSubmitReview = () => {
         throw new Error('Некорректный формат ответа: отсутствует payURL или status не ok')
       }
 
-      console.log('Ссылка на оплату успешно получена:', data)
       return { url: data.data.payURL }
     } catch (error) {
       console.error('Ошибка при получении ссылки на оплату:', error)
