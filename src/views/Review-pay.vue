@@ -1,15 +1,16 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSubmitReview } from '@/components/useSubmitReview'
-import { useRouter } from 'vue-router'
 import Payment from '@/components/Payment.vue'
 import ReviewHead from '@/components/ReviewHead.vue'
 import Review from '@/components/Review.vue'
+import ReviewBlock from '@/components/ReviewBlock.vue'
 
-const visitId = 2
+const props = defineProps({
+  visitId: Number,
+})
 
 const { submitReview, getPayLink } = useSubmitReview()
-const router = useRouter()
 
 // Refs
 const star = ref(0)
@@ -31,6 +32,7 @@ const starText = computed(() => {
 })
 
 const handleSubmit = async ({ tipAmount, publishOnSite }) => {
+  // Отправка отзыва
   let reviewSuccess = true
   if (star.value > 0) {
     const payload = {
@@ -42,35 +44,29 @@ const handleSubmit = async ({ tipAmount, publishOnSite }) => {
       publishOnSite,
     }
     reviewSuccess = await submitReview(payload, { withCredentials: true })
-    if (!reviewSuccess) {
-      alert('Ошибка при отправке отзыва, попробуйте позже.')
-      return
-    }
+    if (!reviewSuccess) return alert('Ошибка при отправке отзыва')
+    reviewBlock.value = false
     isRating.value = true
   }
 
+  // Чаевые
   if (tipAmount) {
     const payLinkData = await getPayLink({ summ: tipAmount, visitId: props.visitId })
-    if (payLinkData && payLinkData.url) {
+    if (payLinkData?.url) {
       window.location.href = payLinkData.url
+      return // важно прекратить выполнение дальше
     } else {
-      alert('Ошибка при получении ссылки на оплату, попробуйте позже.')
-      return
+      return alert('Ошибка при получении ссылки на оплату')
     }
   }
 
-  if (reviewSuccess && star.value > 0 && !tipAmount) {
-    router.push({
-      path: '/success',
-      query: { rating: star.value, comment: comment.value },
-    })
-    resetForm()
-  }
+  // Сброс формы, если чаевых нет
+  if (reviewSuccess && star.value > 0 && !tipAmount) resetForm()
 }
 
 const resetForm = () => {
-  star.value = 0
-  comment.value = ''
+  // star.value = 0
+  // comment.value = ''
   selectTags.value = []
   photos.value = []
   coffeeIsTrue.value = ''
@@ -79,8 +75,8 @@ const resetForm = () => {
 </script>
 
 <template>
-  <ReviewBlock v-if="isRating" :rating="rating" :comment="comment" />
-  <div class="flex justify-center items-center h-screen">
+  <div class="flex justify-center flex-col gap-10 items-center h-screen">
+    <ReviewBlock v-if="isRating" :rating="star" :comment="comment" />
     <button
       type="button"
       @click="reviewBlock = !reviewBlock"
@@ -118,14 +114,13 @@ const resetForm = () => {
               studio-name="Студия на Арбате"
               visit-date="21.05.2025"
               :visitId="visitId"
-              @submit="handleSubmit"
             />
           </div>
           <Payment
             :is-comment="comment"
-            :on-submit="handleSubmit"
             :select-star="star"
             :visit-id="visitId"
+            @submit="handleSubmit"
             @update:publishOnSite="publishOnSite = $event"
           />
         </div>

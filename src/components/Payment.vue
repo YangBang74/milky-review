@@ -3,7 +3,6 @@ import { ref, watch } from 'vue'
 
 const props = defineProps({
   isComment: String,
-  onSubmit: Function,
   selectStar: Number,
   visitId: Number,
   masterId: Number,
@@ -11,7 +10,7 @@ const props = defineProps({
   isPayment: Boolean,
 })
 
-const emit = defineEmits(['update:publishOnSite'])
+const emit = defineEmits(['update:publishOnSite', 'submit'])
 
 const selectTip = ref(null)
 const otherTip = ref(false)
@@ -46,7 +45,7 @@ const toggleOtherTip = () => {
 
 const handleSubmit = async () => {
   const tipAmount = selectTip.value || (price.value ? parseInt(price.value) : null)
-  await props.onSubmit({ tipAmount, publishOnSite: publishOnSite.value })
+  emit('submit', { tipAmount, publishOnSite: publishOnSite.value })
 }
 
 watch(price, (newVal) => {
