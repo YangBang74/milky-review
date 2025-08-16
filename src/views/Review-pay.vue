@@ -78,6 +78,7 @@ const resetForm = () => {
   <div class="flex justify-center flex-col gap-10 items-center h-screen">
     <ReviewBlock v-if="isRating" :rating="star" :comment="comment" />
     <button
+      v-if="!isRating"
       type="button"
       @click="reviewBlock = !reviewBlock"
       class="cursor-pointer bg-black text-white font-semibold px-6 py-2 flex justify-center items-center gap-[0.1875rem]"

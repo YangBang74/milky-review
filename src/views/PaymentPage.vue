@@ -30,7 +30,7 @@ const handleSubmit = async ({ tipAmount }) => {
       @click="paymentBlock = !paymentBlock"
       class="cursor-pointer bg-black text-white font-semibold px-6 py-2 flex justify-center items-center gap-[0.1875rem]"
     >
-      <span class="text-sm font-light">Опубликовать отзыв на сайте</span>
+      <span class="text-sm font-light">Опубликовать чаевые</span>
     </button>
   </div>
 
@@ -42,7 +42,7 @@ const handleSubmit = async ({ tipAmount }) => {
       >
         <div class="max-w-[23.4375rem] w-full z-50 bg-white">
           <ReviewHead />
-          <Payment :on-submit="handleSubmit" :master-id="masterId" :is-payment="true" />
+          <Payment @submit="handleSubmit" :master-id="masterId" :is-payment="true" />
         </div>
       </div>
     </Transition>
