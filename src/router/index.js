@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ReviewPay from '@/views/Review-pay.vue'
+import ReviewPay from '@/views/ReviewPay.vue'
 import PaymentPage from '@/views/PaymentPage.vue'
 import ReviewPage from '@/views/ReviewPage.vue'
 
